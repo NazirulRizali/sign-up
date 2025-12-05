@@ -166,6 +166,8 @@
                 feedbackBox.classList.add('bg-green-100', 'text-green-700');
             } else if (type === 'error') {
                 feedbackBox.classList.add('bg-red-100', 'text-red-700');
+            } else {
+                 feedbackBox.classList.add('hidden');
             }
             feedbackBox.innerHTML = message;
         }
@@ -206,24 +208,28 @@
             }
 
             // Prepare data for saving
+            // NOTE: The 'password' field is deliberately omitted here. In a real-world scenario, 
+            // the password should NEVER be saved directly to Firestore from the client. 
+            // It should be handled by a secure Authentication service (like Firebase Auth).
             const formData = {
                 name: document.getElementById('name').value,
                 email: document.getElementById('email').value,
                 age: parseInt(document.getElementById('age').value),
                 country: document.getElementById('country').value,
                 remember_me: document.getElementById('remember-me').checked,
-                timestamp: new Date()
+                timestamp: new Date().toISOString()
             };
 
             // Disable button and show loading state
             button.disabled = true;
-            button.innerHTML = 'Processing...';
+            button.innerHTML = '<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Saving...';
+
 
             try {
                 // Collection path: /artifacts/{appId}/public/data/signups
                 const signupsCollectionRef = collection(db, `artifacts/${appId}/public/data/signups`);
 
-                // Save data to Firestore (password is omitted as it should be handled securely on a real backend)
+                // Save data to Firestore
                 await addDoc(signupsCollectionRef, formData);
 
                 displayMessage('success', `
@@ -236,7 +242,7 @@
 
             } catch (error) {
                 console.error("Error saving data:", error);
-                displayMessage('error', `<p><strong>Submission Failed:</strong> ${error.message}.</p>`);
+                displayMessage('error', `<p><strong>Submission Failed:</strong> An unexpected error occurred.</p><p>Error: ${error.message}</p>`);
             } finally {
                 // Re-enable button
                 button.disabled = false;
