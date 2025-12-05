@@ -157,6 +157,7 @@
         
         // Initialize db and auth globally
         let db, auth;
+        let isFirebaseInitialized = false;
 
         // Message display utility
         function displayMessage(type, message) {
@@ -175,6 +176,11 @@
 
         async function initializeFirebase() {
             try {
+                // Ensure config is present before trying to initialize
+                if (Object.keys(firebaseConfig).length === 0) {
+                     throw new Error("Firebase configuration is empty.");
+                }
+
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
@@ -185,8 +191,11 @@
                 } else {
                     await signInAnonymously(auth);
                 }
+                isFirebaseInitialized = true;
+                console.log("Firebase initialized and authenticated successfully.");
             } catch (error) {
                 console.error("Firebase initialization or sign-in failed:", error);
+                isFirebaseInitialized = false; // Set to false on failure
                 displayMessage('error', `<p><strong>Setup Error:</strong> Could not connect to the database. Please check console for details.</p>`);
             }
         }
@@ -208,9 +217,10 @@
                 return;
             }
 
-            // Guard clause to ensure db is initialized before proceeding
-            if (!db) {
-                displayMessage('error', `<p><strong>Submission Failed:</strong> Database is not initialized.</p>`);
+            // GUARD CLAUSE: Ensure Firebase is initialized before attempting database operations
+            if (!isFirebaseInitialized || !db) {
+                displayMessage('error', `<p><strong>Submission Failed:</strong> Database connection failed during setup. Cannot save data.</p>`);
+                console.error("Database not ready. isFirebaseInitialized:", isFirebaseInitialized, "db:", db);
                 return;
             }
 
@@ -234,7 +244,6 @@
 
             try {
                 // Collection path: /artifacts/{appId}/public/data/signups
-                // FIX: Ensure db is passed as the first argument to collection()
                 const signupsCollectionRef = collection(db, `artifacts/${appId}/public/data/signups`);
 
                 // Save data to Firestore
