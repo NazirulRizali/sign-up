@@ -22,7 +22,6 @@
             }
         }
     </script>
-    <!-- Custom CSS (kept within the single file) -->
     <style>
         /* Apply smooth transitions to input fields for better UX */
         input:focus, select:focus {
@@ -100,6 +99,34 @@
                 </div>
             </div>
 
+            <!-- Phone Number (Country Code + Number) - NEW FIELD -->
+            <div class="grid grid-cols-3 gap-4">
+                <!-- Country Code (Takes 1/3 of the space) -->
+                <div class="col-span-1">
+                    <label for="country-code" class="block text-sm font-medium text-gray-700 mb-1">Code</label>
+                    <select id="country-code" name="country-code" required
+                            class="mt-1 block w-full px-2 py-2 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                        <option value="+1" selected>+1 (US/CA)</option>
+                        <option value="+44">+44 (UK)</option>
+                        <option value="+49">+49 (DE)</option>
+                        <option value="+61">+61 (AU)</option>
+                        <option value="+81">+81 (JP)</option>
+                        <option value="+91">+91 (IN)</option>
+                        <option value="+33">+33 (FR)</option>
+                        <option value="+86">+86 (CN)</option>
+                        <option value="+00">Other</option>
+                    </select>
+                </div>
+                <!-- Phone Number Input (Takes 2/3 of the space) -->
+                <div class="col-span-2">
+                    <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                    <input type="tel" id="phone" name="phone" required
+                           placeholder="555 555 5555"
+                           class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                </div>
+            </div>
+            <!-- END NEW FIELD -->
+
             <!-- Terms and Conditions & Remember Me -->
             <div class="flex items-start justify-between">
                 <!-- Checkbox 1: Terms -->
@@ -122,7 +149,7 @@
 
             <!-- Sign Up Button -->
             <div>
-                <button type="submit" id="signup-button"
+                <button type="submit"
                         class="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-md text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-150 ease-in-out">
                     Sign Up
                 </button>
@@ -144,127 +171,37 @@
 
     </div>
     
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // --- FIREBASE SETUP ---
-        // Global variables provided by the environment
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-        const authToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-        
-        // Initialize db and auth globally
-        let db, auth;
-        let isFirebaseInitialized = false;
-
-        // Message display utility
-        function displayMessage(type, message) {
-            const feedbackBox = document.getElementById('feedback-message');
-            feedbackBox.classList.remove('hidden', 'bg-green-100', 'text-green-700', 'bg-red-100', 'text-red-700');
-            
-            if (type === 'success') {
-                feedbackBox.classList.add('bg-green-100', 'text-green-700');
-            } else if (type === 'error') {
-                feedbackBox.classList.add('bg-red-100', 'text-red-700');
-            } else {
-                 feedbackBox.classList.add('hidden');
-            }
-            feedbackBox.innerHTML = message;
-        }
-
-        async function initializeFirebase() {
-            try {
-                // Ensure config is present before trying to initialize
-                if (Object.keys(firebaseConfig).length === 0) {
-                     throw new Error("Firebase configuration is empty.");
-                }
-
-                const app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-
-                // Authenticate the user. Use custom token if available, otherwise sign in anonymously.
-                if (authToken) {
-                    await signInWithCustomToken(auth, authToken);
-                } else {
-                    await signInAnonymously(auth);
-                }
-                isFirebaseInitialized = true;
-                console.log("Firebase initialized and authenticated successfully.");
-            } catch (error) {
-                console.error("Firebase initialization or sign-in failed:", error);
-                isFirebaseInitialized = false; // Set to false on failure
-                displayMessage('error', `<p><strong>Setup Error:</strong> Could not connect to the database. Please check console for details.</p>`);
-            }
-        }
-
-        // Initialize Firebase when the script loads
-        await initializeFirebase();
-        
-        // Function to handle form submission and save data to Firestore
-        window.handleSignUp = async function(event) {
+    <script>
+        // Simple JavaScript function to handle form submission and display a success message.
+        // In a real application, this is where you would send data to a server.
+        function handleSignUp(event) {
             event.preventDefault(); // Prevent the default form submission (page reload)
 
             const form = document.getElementById('signup-form');
-            const button = document.getElementById('signup-button');
-            displayMessage('hidden', ''); // Clear previous messages
-
+            const feedbackBox = document.getElementById('feedback-message');
+            
             // Check HTML5 validation status
             if (!form.checkValidity()) {
                 // If form is invalid, let browser show default error messages
                 return;
             }
 
-            // GUARD CLAUSE: Ensure Firebase is initialized before attempting database operations
-            if (!isFirebaseInitialized || !db) {
-                displayMessage('error', `<p><strong>Submission Failed:</strong> Database connection failed during setup. Cannot save data.</p>`);
-                console.error("Database not ready. isFirebaseInitialized:", isFirebaseInitialized, "db:", db);
-                return;
-            }
+            // Get form data (for display purposes)
+            const name = document.getElementById('name').value;
+            const countryCode = document.getElementById('country-code').value; // Get new country code
+            const phone = document.getElementById('phone').value;           // Get new phone number
 
-            // Prepare data for saving
-            // NOTE: The 'password' field is deliberately omitted here. In a real-world scenario, 
-            // the password should NEVER be saved directly to Firestore from the client. 
-            // It should be handled by a secure Authentication service (like Firebase Auth).
-            const formData = {
-                name: document.getElementById('name').value,
-                email: document.getElementById('email').value,
-                age: parseInt(document.getElementById('age').value),
-                country: document.getElementById('country').value,
-                remember_me: document.getElementById('remember-me').checked,
-                timestamp: new Date().toISOString()
-            };
+            // Display success message
+            feedbackBox.classList.remove('hidden', 'bg-red-100', 'text-red-700');
+            feedbackBox.classList.add('bg-green-100', 'text-green-700');
+            feedbackBox.innerHTML = `
+                <p><strong>Success!</strong> Welcome, ${name}.</p>
+                <p>Phone: ${countryCode} ${phone}</p>
+                <p>Form data collected. (No actual submission was made.)</p>
+            `;
 
-            // Disable button and show loading state
-            button.disabled = true;
-            button.innerHTML = '<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Saving...';
-
-
-            try {
-                // Collection path: /artifacts/{appId}/public/data/signups
-                const signupsCollectionRef = collection(db, `artifacts/${appId}/public/data/signups`);
-
-                // Save data to Firestore
-                await addDoc(signupsCollectionRef, formData);
-
-                displayMessage('success', `
-                    <p><strong>Success!</strong> Welcome, ${formData.name}.</p>
-                    <p>Your details have been saved to the database.</p>
-                `);
-
-                // Clear form after successful submission
-                form.reset();
-
-            } catch (error) {
-                console.error("Error saving data:", error);
-                displayMessage('error', `<p><strong>Submission Failed:</strong> An unexpected error occurred.</p><p>Error: ${error.message}</p>`);
-            } finally {
-                // Re-enable button
-                button.disabled = false;
-                button.innerHTML = 'Sign Up';
-            }
+            // Clear form after successful "submission"
+            form.reset();
         }
     </script>
 </body>
