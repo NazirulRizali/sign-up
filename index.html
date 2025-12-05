@@ -122,7 +122,7 @@
 
             <!-- Sign Up Button -->
             <div>
-                <button type="submit"
+                <button type="submit" id="signup-button"
                         class="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-md text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-150 ease-in-out">
                     Sign Up
                 </button>
@@ -144,34 +144,104 @@
 
     </div>
     
-    <script>
-        // Simple JavaScript function to handle form submission and display a success message.
-        // In a real application, this is where you would send data to a server.
-        function handleSignUp(event) {
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- FIREBASE SETUP ---
+        // Global variables provided by the environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const authToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        
+        let db, auth;
+
+        // Message display utility
+        function displayMessage(type, message) {
+            const feedbackBox = document.getElementById('feedback-message');
+            feedbackBox.classList.remove('hidden', 'bg-green-100', 'text-green-700', 'bg-red-100', 'text-red-700');
+            
+            if (type === 'success') {
+                feedbackBox.classList.add('bg-green-100', 'text-green-700');
+            } else if (type === 'error') {
+                feedbackBox.classList.add('bg-red-100', 'text-red-700');
+            }
+            feedbackBox.innerHTML = message;
+        }
+
+        async function initializeFirebase() {
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                // Authenticate the user. Use custom token if available, otherwise sign in anonymously.
+                if (authToken) {
+                    await signInWithCustomToken(auth, authToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Firebase initialization or sign-in failed:", error);
+                displayMessage('error', `<p><strong>Setup Error:</strong> Could not connect to the database. Please check console for details.</p>`);
+            }
+        }
+
+        // Initialize Firebase when the script loads
+        await initializeFirebase();
+        
+        // Function to handle form submission and save data to Firestore
+        window.handleSignUp = async function(event) {
             event.preventDefault(); // Prevent the default form submission (page reload)
 
             const form = document.getElementById('signup-form');
-            const feedbackBox = document.getElementById('feedback-message');
-            
+            const button = document.getElementById('signup-button');
+            displayMessage('hidden', ''); // Clear previous messages
+
             // Check HTML5 validation status
             if (!form.checkValidity()) {
                 // If form is invalid, let browser show default error messages
                 return;
             }
 
-            // Get form data (for display purposes)
-            const name = document.getElementById('name').value;
+            // Prepare data for saving
+            const formData = {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                age: parseInt(document.getElementById('age').value),
+                country: document.getElementById('country').value,
+                remember_me: document.getElementById('remember-me').checked,
+                timestamp: new Date()
+            };
 
-            // Display success message
-            feedbackBox.classList.remove('hidden', 'bg-red-100', 'text-red-700');
-            feedbackBox.classList.add('bg-green-100', 'text-green-700');
-            feedbackBox.innerHTML = `
-                <p><strong>Success!</strong> Welcome, ${name}.</p>
-                <p>Form data collected. (No actual submission was made.)</p>
-            `;
+            // Disable button and show loading state
+            button.disabled = true;
+            button.innerHTML = 'Processing...';
 
-            // Clear form after successful "submission"
-            form.reset();
+            try {
+                // Collection path: /artifacts/{appId}/public/data/signups
+                const signupsCollectionRef = collection(db, `artifacts/${appId}/public/data/signups`);
+
+                // Save data to Firestore (password is omitted as it should be handled securely on a real backend)
+                await addDoc(signupsCollectionRef, formData);
+
+                displayMessage('success', `
+                    <p><strong>Success!</strong> Welcome, ${formData.name}.</p>
+                    <p>Your details have been saved to the database.</p>
+                `);
+
+                // Clear form after successful submission
+                form.reset();
+
+            } catch (error) {
+                console.error("Error saving data:", error);
+                displayMessage('error', `<p><strong>Submission Failed:</strong> ${error.message}.</p>`);
+            } finally {
+                // Re-enable button
+                button.disabled = false;
+                button.innerHTML = 'Sign Up';
+            }
         }
     </script>
 </body>
