@@ -88,12 +88,33 @@
                 </div>
             </div>
 
-            <!-- Age (Single column now) -->
-            <div>
-                <label for="age" class="block text-sm font-medium text-gray-700 mb-1">Age</label>
-                <input type="number" id="age" name="age" required
-                       min="18" max="120" placeholder="18+"
-                       class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+            <!-- Age & Country (Two Columns on Desktop) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                
+                <!-- Age -->
+                <div>
+                    <label for="age" class="block text-sm font-medium text-gray-700 mb-1">Age</label>
+                    <input type="number" id="age" name="age" required
+                           min="18" max="120" placeholder="18+"
+                           class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                </div>
+                
+                <!-- Country -->
+                <div>
+                    <label for="country" class="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                    <select id="country" name="country" required
+                            class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                        <option value="" disabled selected>Select your country</option>
+                        <option value="US">United States</option>
+                        <option value="CA">Canada</option>
+                        <option value="GB">United Kingdom</option>
+                        <option value="AU">Australia</option>
+                        <option value="DE">Germany</option>
+                        <option value="FR">France</option>
+                        <option value="JP">Japan</option>
+                        <option value="OTHER">Other</option>
+                    </select>
+                </div>
             </div>
                 
             <!-- Password -->
@@ -112,23 +133,6 @@
                        minlength="8"
                        placeholder="Re-enter your password"
                        class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
-            </div>
-
-            <!-- Country (Single column now) -->
-            <div>
-                <label for="country" class="block text-sm font-medium text-gray-700 mb-1">Country</label>
-                <select id="country" name="country" required
-                        class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
-                    <option value="" disabled selected>Select your country</option>
-                    <option value="US">United States</option>
-                    <option value="CA">Canada</option>
-                    <option value="GB">United Kingdom</option>
-                    <option value="AU">Australia</option>
-                    <option value="DE">Germany</option>
-                    <option value="FR">France</option>
-                    <option value="JP">Japan</option>
-                    <option value="OTHER">Other</option>
-                </select>
             </div>
             
             <!-- Terms and Conditions & Remember Me -->
