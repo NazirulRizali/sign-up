@@ -155,6 +155,7 @@
         const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
         const authToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
         
+        // Initialize db and auth globally
         let db, auth;
 
         // Message display utility
@@ -207,6 +208,12 @@
                 return;
             }
 
+            // Guard clause to ensure db is initialized before proceeding
+            if (!db) {
+                displayMessage('error', `<p><strong>Submission Failed:</strong> Database is not initialized.</p>`);
+                return;
+            }
+
             // Prepare data for saving
             // NOTE: The 'password' field is deliberately omitted here. In a real-world scenario, 
             // the password should NEVER be saved directly to Firestore from the client. 
@@ -227,6 +234,7 @@
 
             try {
                 // Collection path: /artifacts/{appId}/public/data/signups
+                // FIX: Ensure db is passed as the first argument to collection()
                 const signupsCollectionRef = collection(db, `artifacts/${appId}/public/data/signups`);
 
                 // Save data to Firestore
